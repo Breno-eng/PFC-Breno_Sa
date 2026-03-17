@@ -1,0 +1,74 @@
+project:
+  name: "Digital Twin - Multi-Output ResNet"
+  version: "2.0"
+  seed: 42
+
+paths:
+  # Caminhos relativos à pasta raiz do projeto
+  dataset: "datasets_gerados/dataset_unificado.csv"
+  output_visualizacoes: "Modelos Keras/Visualizações"
+  output_modelos: "Modelos Keras"
+  output_analise: "Modelos Keras/Analise Especial"
+  output_metricas: "Modelos Keras/Metricas de Qualidade"
+  filtro_qualidade: "Modelos Keras/Metricas de Qualidade/colunas_recomendadas_remover.csv"
+
+variables:
+  critical:
+    - "PRODUTO_ACETA-01_MOLEFRAC_MIXED"
+    # Adicione outras aqui se precisar
+
+thresholds:
+  r2_critical: 0.90
+  r2_normal: 0.90
+  r2_minimum: 0.55   # Abaixo disso remove
+  approval_target: 90.0 # Meta de aprovação geral (%)
+
+flags:
+  remove_extreme_data: true
+  apply_quality_filter: true
+  remove_bad_outputs: true
+  usar_especialistas: false
+  usar_bias: false
+  modo_validacao: true # true: Keras detecta risco → Aspen RODA mesmo assim → você descobre se era falso alarme ; false: Keras detecta risco → Aspen PARA → operação protegida
+
+training:
+  base_model:
+    lr: 0.001
+    epochs: 300
+    batch_size: 128
+    patience: 50
+  
+  retraining:
+    max_attempts_normal: 2
+    max_attempts_critical: 5 # Aumentado para críticas
+    lr_decay: 0.5
+    epochs_increase: 50
+
+
+data_quality:
+  thresholds:
+    # 1. Variabilidade
+    cv_minimo: 0.01
+    cv_muito_baixo: 0.05
+    variance_threshold: 0.01
+    
+    # 2. Distribuição
+    skewness_max: 5.0
+    kurtosis_max: 10.0
+    zeros_max: 0.80
+    unique_values_min: 10
+    
+    # 3. Qualidade
+    missing_max: 0.05
+    outliers_max: 0.10
+    outliers_critical: 0.20
+    
+    # 4. Correlação
+    correlation_max: 0.95
+    vif_max: 10.0
+    
+    # 5. Informação
+    mutual_info_min: 0.01
+    
+    # 6. Concentração
+    max_value_concentration: 0.95
